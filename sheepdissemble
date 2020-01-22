@@ -8,7 +8,6 @@ function = "main"
 if len(sys.argv) > 2:
   function = sys.argv[2]
 outputFile = "/root/bin/sheepdiss/output.txt"
-mainFile = "/root/bin/sheepdiss/main.txt"
 objdump = f"objdump -M intel -S {sys.argv[1]} |cat -n"
 grepmain = f'grep "<{function}>:" {outputFile}'
 grepret = f'grep "ret" {outputFile}'
