@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+from webbot import Browser
+import sys
+import subprocess
+
+inputFile = sys.argv[1]
+function = "main"
+if len(sys.argv) > 2:
+  function = sys.argv[2]
+outputFile = "/root/bin/sheepdiss/output.txt"
+mainFile = "/root/bin/sheepdiss/main.txt"
+objdump = f"objdump -M intel -S {sys.argv[1]} |cat -n"
+grepmain = f'grep "<{function}>:" {outputFile}'
+grepret = f'grep "ret" {outputFile}'
+catFile = f'cat {outputFile}'
+
+def getLineNum(line):
+  main=""
+  line=line.strip()
+  i=0
+  while(i<len(line)):
+    main=main+line[i]
+    if line[i]=="\t":
+      return main
+    i+=1
+
+def findEnd(start, fileC):
+    i=0
+    fileContents=fileC.split("\n")
+    colonFlag=True
+
+    while(colonFlag):
+      if(fileContents[start+i].count(":")==0):
+        colonFlag=False
+        end=int(fileContents[start+i])
+        return end-1
+      i+=1
+      
+def printFunction(start, end, fileC):
+  fileContents=fileC.split("\n")
+  
+  while(start<end):
+    print(fileContents[start])
+    start+=1
+
+with open(outputFile, "w") as f:
+  subprocess.run(objdump, shell=True, stdout=f)
+  
+returns = subprocess.run(grepret, shell=True, capture_output=True, text=True)
+main = subprocess.run(grepmain, shell=True, capture_output=True, text=True)
+wholeFile = subprocess.run(catFile, shell=True, capture_output=True, text=True)
+
+mainStart=int(getLineNum(main.stdout))-1
+mainEnd=findEnd(mainStart, wholeFile.stdout)
+
+printFunction(mainStart, mainEnd, wholeFile.stdout)
